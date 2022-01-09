@@ -49,3 +49,34 @@ func max(a, b int) int {
 	}
 	return b
 }
+
+func Rotate(img image.Image, clockwise int8) image.Image {
+	clockwise %= 4
+	if clockwise == 0 {
+		return img
+	}
+	if clockwise < 0 {
+		clockwise += 4
+	}
+	rect := img.Bounds()
+	if clockwise%2 == 1 {
+		rect.Min.X, rect.Min.Y = rect.Min.Y, rect.Min.X
+		rect.Max.X, rect.Max.Y = rect.Max.Y, rect.Max.X
+	}
+	img2 := image.NewRGBA(rect)
+	for i := rect.Min.X; i < rect.Max.X; i++ {
+		for j := rect.Min.Y; j < rect.Max.Y; j++ {
+			r, g, b, a := img.At(i, j).RGBA()
+			c := color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)}
+			switch clockwise {
+			case 1:
+				img2.SetRGBA(rect.Max.X-j-1, i, c)
+			case 2:
+				img2.SetRGBA(rect.Max.X-i-1, rect.Max.Y-j-1, c)
+			case 3:
+				img2.SetRGBA(j, rect.Max.Y-i-1, c)
+			}
+		}
+	}
+	return img2
+}
