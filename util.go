@@ -5,6 +5,62 @@ import (
 	"image/color"
 )
 
+// Equals 判断两个图像是否完全相同
+func Equals(img1, img2 image.Image) bool {
+	bounds1 := img1.Bounds()
+	bounds2 := img2.Bounds()
+	if bounds1.Dx() != bounds2.Dx() || bounds1.Dy() != bounds2.Dy() {
+		return false
+	}
+	dx, dy := bounds1.Min.X-bounds2.Min.X, bounds1.Min.Y-bounds2.Min.Y
+	for i := bounds2.Min.X; i < bounds2.Max.X; i++ {
+		for j := bounds2.Min.Y; j < bounds2.Max.Y; j++ {
+			r1, g1, b1, a1 := bounds1.At(i+dx, j+dy).RGBA()
+			r2, g2, b2, a2 := bounds2.At(i, j).RGBA()
+			if r1 != r2 || g1 != g2 || b1 != b2 || a1 != a2 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// EqualsSub 判断img1在(x, y)位置的子图像与img2是否完全相同
+func EqualsSub(img1 image.Image, x int, y int, img2 image.Image) bool {
+	bounds1 := img1.Bounds()
+	bounds2 := img2.Bounds()
+	if bounds1.Dx()-x < bounds2.Dx() || bounds1.Dy()-y < bounds2.Dy() {
+		return false
+	}
+	dx, dy := bounds1.Min.X+x-bounds2.Min.X, bounds1.Min.Y+y-bounds2.Min.Y
+	for i := bounds2.Min.X; i < bounds2.Max.X; i++ {
+		for j := bounds2.Min.Y; j < bounds2.Max.Y; j++ {
+			r1, g1, b1, a1 := bounds1.At(i+dx, j+dy).RGBA()
+			r2, g2, b2, a2 := bounds2.At(i, j).RGBA()
+			if r1 != r2 || g1 != g2 || b1 != b2 || a1 != a2 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// Search 在img1中，从(x, y)位置开始搜索img2图像，返回值是相对于img1.Bounds().Min的相对位置
+func Search(img1 image.Image, x int, y int, img2 image.Image) (point image.Point, ok bool) {
+	bounds1 := img1.Bounds()
+	bounds2 := img2.Bounds()
+	width := bounds1.Dx() - bounds2.Dx() + 1
+	height := bounds1.Dy() - bounds2.Dy() + 1
+	for i := x; i < width; i++ {
+		for j := y; j < height; j++ {
+			if EqualsSub(img1, i, j, img2) {
+				return image.Point{X: i, Y: j}, true
+			}
+		}
+	}
+	return image.Point{}, false
+}
+
 // Screen 滤色
 func Screen(imgs ...image.Image) *image.RGBA {
 	maxSize := imgs[0].Bounds()
