@@ -170,3 +170,35 @@ func Rotate(img image.Image, clockwise int8) image.Image {
 		rect:      rect,
 	}
 }
+
+type zoomGraphicsImage struct {
+	img        image.Image
+	imgRect    image.Rectangle
+	rect       image.Rectangle
+	background color.Color
+}
+
+func (z *zoomGraphicsImage) ColorModel() color.Model {
+	return z.img.ColorModel()
+}
+
+func (z *zoomGraphicsImage) Bounds() image.Rectangle {
+	return z.rect
+}
+
+func (z *zoomGraphicsImage) At(x, y int) color.Color {
+	if (image.Point{X: x, Y: y}).In(z.imgRect) {
+		return z.img.At(x, y)
+	}
+	return z.background
+}
+
+// ZoomGraphics 放大或缩小画布，img-原图，rect-新画布的位置，background-空余部分的背景色
+func ZoomGraphics(img image.Image, rect image.Rectangle, background color.Color) image.Image {
+	return &zoomGraphicsImage{
+		img:        img,
+		imgRect:    img.Bounds(),
+		rect:       rect,
+		background: background,
+	}
+}
