@@ -1,8 +1,10 @@
 package colortools
 
 import (
+	"fmt"
 	"image"
 	"image/color"
+	"math"
 )
 
 // Equals 判断两个图像是否完全相同
@@ -200,5 +202,74 @@ func ZoomGraphics(img image.Image, rect image.Rectangle, background color.Color)
 		imgRect:    img.Bounds(),
 		rect:       rect,
 		background: background,
+	}
+}
+
+type mosaicImage struct {
+	img   image.Image
+	rect  image.Rectangle
+	px    int
+	cache [][]color.RGBA
+}
+
+func (m *mosaicImage) ColorModel() color.Model {
+	return color.RGBAModel
+}
+
+func (m *mosaicImage) Bounds() image.Rectangle {
+	return m.img.Bounds()
+}
+
+func (m *mosaicImage) At(x, y int) color.Color {
+	if !(image.Point{X: x, Y: y}).In(m.rect) {
+		return m.img.At(x, y)
+	}
+	return m.cache[(x-m.rect.Min.X)/m.px][(y-m.rect.Min.Y)/m.px]
+}
+
+// Mosaic 马赛克，img-原图，rect-马赛克的区域，px-马赛克的像素
+func Mosaic(img image.Image, rect image.Rectangle, px int) image.Image {
+	if px < 0 {
+		panic(fmt.Sprint("illegal param: ", px, " px"))
+	} else if px <= 1 {
+		return img
+	}
+	cache := make([][]color.RGBA, (rect.Dx()-1)/px+1)
+	for i := 0; i*px < rect.Dx(); i++ {
+		cache[i] = make([]color.RGBA, (rect.Dy()-1)/px+1)
+		for j := 0; j*px < rect.Dy(); j++ {
+			var r, g, b, a uint32
+			count := 0
+			for xx := 0; xx < px; xx++ {
+				xi := i*px + xx
+				if xi >= rect.Max.X {
+					break
+				}
+				for yy := 0; yy < px; yy++ {
+					yi := j*px + yy
+					if yi >= rect.Max.Y {
+						break
+					}
+					r1, g1, b1, a1 := img.At(xi, yi).RGBA()
+					r += r1 >> 8
+					g += g1 >> 8
+					b += b1 >> 8
+					a += a1 >> 8
+					count++
+				}
+			}
+			cache[i][j] = color.RGBA{
+				R: uint8(math.Round(float64(r) / float64(count))),
+				G: uint8(math.Round(float64(g) / float64(count))),
+				B: uint8(math.Round(float64(b) / float64(count))),
+				A: uint8(math.Round(float64(a) / float64(count))),
+			}
+		}
+	}
+	return &mosaicImage{
+		img:   img,
+		rect:  rect,
+		px:    px,
+		cache: cache,
 	}
 }
