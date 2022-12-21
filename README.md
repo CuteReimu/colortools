@@ -1,6 +1,6 @@
 # Color Tools
 ![](https://img.shields.io/github/languages/top/CuteReimu/colortools "Language")
-[![](https://img.shields.io/github/workflow/status/CuteReimu/colortools/Go)](https://github.com/CuteReimu/colortools/actions/workflows/golangci-lint.yml "Analysis")
+[![](https://img.shields.io/github/actions/workflow/status/CuteReimu/colortools/golangci-lint.yml?branch=master)](https://github.com/CuteReimu/colortools/actions/workflows/golangci-lint.yml "Analysis")
 [![](https://img.shields.io/github/license/CuteReimu/colortools)](https://github.com/CuteReimu/colortools/blob/master/LICENSE "LICENSE")
 
 Useful color tools.
